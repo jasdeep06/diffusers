@@ -315,6 +315,10 @@ class StableDiffusionPipeline(DiffusionPipeline):
                 return_tensors="pt",
             )
             text_input_ids = text_inputs.input_ids
+            token_idx_to_word = {idx: self.tokenizer.decode(t)
+            for idx, t in enumerate(self.tokenizer(prompt)['input_ids'])
+            if 0 < idx < len(self.tokenizer(prompt)['input_ids']) - 1}
+            print("token index to word mapping : ",token_idx_to_word)
             untruncated_ids = self.tokenizer(prompt, padding="longest", return_tensors="pt").input_ids
 
             if untruncated_ids.shape[-1] >= text_input_ids.shape[-1] and not torch.equal(
