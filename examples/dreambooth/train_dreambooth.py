@@ -259,6 +259,7 @@ def parse_args(input_args=None):
         action="store_true",
         help="Use prompt per image. Put prompts in the same directory as images, e.g. for image.png create image.png.txt.",
     )
+    parser.add_argument("--new_tokens",nargs='+',help="New tokens to add to the tokenizer")
 
     if input_args is not None:
         args = parser.parse_args(input_args)
@@ -526,6 +527,9 @@ def main(args):
             subfolder="tokenizer",
             revision=args.revision,
         )
+        if args.new_tokens is not None:
+            print("adding tokens:", args.new_tokens)
+            tokenizer.add_tokens(args.new_tokens)
 
     # Load models and create wrapper for stable diffusion
     text_encoder = CLIPTextModel.from_pretrained(
@@ -533,6 +537,9 @@ def main(args):
         subfolder="text_encoder",
         revision=args.revision,
     )
+    if args.new_tokens is not None:
+        text_encoder.resize_token_embeddings(len(tokenizer))
+
     vae = AutoencoderKL.from_pretrained(
         args.pretrained_model_name_or_path,
         subfolder="vae",
@@ -732,6 +739,7 @@ def main(args):
                 safety_checker=None,
                 torch_dtype=torch.float16,
                 revision=args.revision,
+                tokenizer=tokenizer,
             )
             pipeline.scheduler = DDIMScheduler.from_config(pipeline.scheduler.config)
             if is_xformers_available():
